@@ -1,0 +1,1 @@
+1. the websocket consumer in an ASGI server is just like a view in WSGI server 

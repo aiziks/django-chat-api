@@ -1,0 +1,157 @@
+{% load static %}
+<!-- chat/templates/chat/room.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Chat Room</title>
+</head>
+<body>
+    <textarea id="chat-log" cols="100" rows="20"></textarea><br>
+    <input id="chat-message-input" type="text" size="100"><br>
+    <input id="chat-message-submit" type="button" value="Send">
+
+
+    <div id="video-grid"></div>
+
+
+    
+    {{ room_name|json_script:"room_name" }}
+    
+    <!-- <script src="{% static 'reconnecting-websocket.js'%}"></script> -->
+    <script>
+        // var roomName = { room_name_json } ;
+        // var username = { username } ;
+
+        const roomName = JSON.parse(document.getElementById('room_name').textContent);
+
+        // console.log(roomName)
+
+        
+        // every send function invokation will return listen to onmessage event
+        // after invoking send() it sends a request to routing.py websocket_urlpatterns down to the consumers.py
+        const chatSocket = new WebSocket('ws://'+window.location.host+'/ws/chat/'+roomName+'/')
+        // const chatSocket = new ReconnectingWebSocket('ws://'+window.location.host+'/ws/chat/'+roomName+'/')
+
+
+
+        // console.log(chatSocket);
+
+        chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        document.querySelector('#chat-log').value += (data.message + '\n');
+        };
+
+
+        chatSocket.onclose = function(e) {
+            
+            console.error('Chat socket closed unexpectedly');
+        };
+
+
+        document.querySelector('#chat-message-input').focus();
+        document.querySelector('#chat-message-input').onkeyup = function(e) {
+            if (e.keyCode === 13) { // enter, return
+                 document.querySelector('#chat-message-submit').click();
+            }
+        };
+
+        document.querySelector('#chat-message-submit').onclick = function(e) {
+            const messageInputDom = document.querySelector('#chat-message-input');
+            const message = messageInputDom.value;
+            chatSocket.send(JSON.stringify({
+            'message': message
+            }));
+
+        messageInputDom.value = '';
+        
+        };
+
+        
+        // chatSocket.onopen = e => {
+        //     fetchMessages();
+        // }
+
+        //    // preloading chat messages
+        //    const fetchMessages = () =>{
+        //     chatSocket.send(JSON.stringify({'command':'fetch_messages'}))
+        // }
+         
+
+        // // this is the onmessage event coming back from the web server to the client
+        // chatSocket.onmessage = (e) =>  {
+        //     console.log(e.data)
+        //     const data = JSON.parse(e.data);
+        //     if(data['command'] === 'messages'){
+        //         for(let i =0; i<data['messages'].length; i++ ){
+        //             createMessage(data['message'][i]);
+        //         }
+
+        //     }else if(data['command'] === 'new_message'){
+        //         createMessage(data['message'][i]);
+        //     }
+            
+        // };
+
+        // // createMesage function that create a message to the frontend 
+        // // this function is invoked from the chatSocket.onmessage event
+        // const createMessage = () => {
+        //     const message = data[message]
+        //     const author = message['author']
+        //     const msgListTag = document.createElement('li')
+        //     var imgTag = document.createElement('img')
+        //     var pTag = document.createElement('p')
+        //     pTag.textContent  = message.content;
+        //     imgTag.src = 'http://emilcarlson.se'  //user image uploaded on server
+        //     if (author) {
+        //         msgListTag.className = 'sent'
+        //     }else{
+        //         msgListTag.className = 'replies'
+        //     }
+
+        //     msgListTag.appendChild(imgTag);
+        //     pListTag.appendChild(pTag);        
+
+        //     // console.log(data);
+        //     document.querySelector("#chat-log").value += (data.message + '\n' )
+
+        // }
+         
+
+        // // this is onclose event on the chatSocket handdler
+        // chatSocket.onclose = (e) => {
+        //     console.error('Chat socket closed unexpectedly');
+        // }
+
+        // // focuing on the users text input
+        // document.querySelector('#chat-message-input').focus();
+        // document.querySelector('#chat-message-input').onkeyup = (e)  => {
+        //     if (e.keyCode === 13) {  // enter, return
+        //         document.querySelector('#chat-message-submit').click();
+        //     }
+        // };
+
+        // //what happens when the user clicks the submit button when new conversation starts
+        // document.querySelector('#chat-message-submit').onclick = (e) =>  {
+        //     const messageInputDom = document.querySelector('#chat-message-input');
+        //     const message = messageInputDom.value;            
+
+        //     // sending to the channesl through the websocweket
+        //     chatSocket.send(JSON.stringify(
+        //         {
+        //             'command':'new_message',
+        //             'message':message,
+        //             'from':username
+                    
+            
+        //     }))
+
+        //     messageInputDom.value = '';  
+
+        // };
+    </script>
+
+
+
+</body>
+</html>
